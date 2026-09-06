@@ -40,6 +40,13 @@ export function Questionnaire() {
   );
 }
 
+function mapScoreToBand(score: number): 'PRIME_750_PLUS' | 'GOOD_700_749' | 'FAIR_650_699' | 'SUBPRIME_UNDER_650' {
+  if (score >= 750) return 'PRIME_750_PLUS';
+  if (score >= 700) return 'GOOD_700_749';
+  if (score >= 650) return 'FAIR_650_699';
+  return 'SUBPRIME_UNDER_650';
+}
+
 function Question({ question, profile, setField, setUnknown }: {
   question: QuestionNode;
   profile: BorrowerProfile;
@@ -63,10 +70,41 @@ function Question({ question, profile, setField, setUnknown }: {
 
   return (
     <label className="question" htmlFor={id}>
-      <span className="question-title">{question.title}</span>
+      <span className="question-title">
+        {question.title}
+        {question.required && <span style={{ color: 'var(--accent)', marginLeft: '3px', fontWeight: 'bold' }} title="Required field">*</span>}
+      </span>
       {question.helper && <span className="question-helper">{question.helper}</span>}
       {question.tier === 2 && <button type="button" className="unknown-btn" onClick={(event) => { event.preventDefault(); setUnknown(question.key); }}>I don’t know / not sure</button>}
-      {question.kind === 'select' ? (
+      {question.id === 'cibil' ? (
+        <div className="cibil-dual-wrap">
+          <select id={id} value={(value as string | undefined) ?? ''} onChange={(e) => e.target.value === 'UNKNOWN' ? setUnknown(question.key) : onChange(e.target.value)}>
+            <option value="">Select score band…</option>
+            {question.options?.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginTop: '0.4rem', fontSize: '0.78rem', color: 'var(--muted)' }}>
+            <span>Or enter exact score:</span>
+            <input
+              type="number"
+              min={300}
+              max={900}
+              placeholder="e.g. 780"
+              style={{ width: '85px', padding: '0.28rem 0.45rem', fontSize: '0.8rem', border: '1px solid var(--rule)', borderRadius: '4px', background: '#fff' }}
+              onChange={(e) => {
+                const num = Number(e.target.value);
+                if (num >= 300 && num <= 900) {
+                  setField('creditScoreBand', { status: 'KNOWN', value: mapScoreToBand(num) });
+                }
+              }}
+            />
+            {typeof value === 'string' && value !== 'UNKNOWN' && (
+              <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                {value === 'PRIME_750_PLUS' ? '→ Prime (750+)' : value === 'GOOD_700_749' ? '→ Good (700-749)' : value === 'FAIR_650_699' ? '→ Fair (650-699)' : '→ Subprime'}
+              </span>
+            )}
+          </div>
+        </div>
+      ) : question.kind === 'select' ? (
         <select id={id} value={(value as string | undefined) ?? ''} onChange={(e) => e.target.value === 'UNKNOWN' ? setUnknown(question.key) : onChange(e.target.value)}>
           <option value="">Select…</option>
           {question.options?.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}

@@ -20,7 +20,7 @@ export default function App() {
     <main className="app-shell">
       <header className="hero">
         <div>
-          <p className="eyebrow">Lokta · Borrower Copilot · Phase 5</p>
+          <p className="eyebrow">Lokta · Borrower Copilot</p>
           <h1>Borrow with your eyes open.</h1>
           <p className="hero-lede">An adaptive self-assessment that turns your answers into a borrowing decision, affordability range, fair-rate band and negotiation-ready next step.</p>
         </div>
@@ -35,7 +35,12 @@ export default function App() {
           <section className="panel sticky-panel">
             <div className="section-head compact"><span className="kicker">Live status</span><span className={`status-dot ${ready ? 'ready' : ''}`}></span></div>
             {!assessment ? (
-              <div className="empty-state">Answer all 8 must-have questions to calculate the full assessment.</div>
+              <div className="empty-state">
+                <strong style={{ display: 'block', marginBottom: '0.35rem', color: 'var(--ink)' }}>
+                  Complete the 8 core questions to see your assessment.
+                </strong>
+                <span>Answer all required intake questions on the left to calculate your recommendation, safe capacity, and fair pricing.</span>
+              </div>
             ) : (
               <>
                 <div className={`verdict-card verdict-${assessment.o1.verdict.toLowerCase()}`}>

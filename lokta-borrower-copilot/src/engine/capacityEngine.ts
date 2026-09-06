@@ -41,7 +41,7 @@ export function calculateCapacities(
   rules: RuleConfig,
   fairRateHigh: number,
 ): CapacityResult {
-  const normalized = normalizeBorrower(profile);
+  const normalized = normalizeBorrower(profile, rules);
   const pathway = routeProduct(profile);
   const lenderCap = pathway === 'LAP_SECURED' ? rules.foirCaps.lenderSecuredMax : rules.foirCaps.lenderStandardMax;
   const statedIncome = Math.max(normalized.income.primaryNetIncome, normalized.income.effectiveIncome);
@@ -51,14 +51,20 @@ export function calculateCapacities(
 
   const collateral = Math.max(0, known<number>(profile.unencumberedCollateralValue) ?? 0);
   if (pathway === 'LAP_SECURED' && collateral > 0) {
-    lenderSanction = Math.min(lenderSanction, collateral * 0.5);
+    lenderSanction = Math.min(lenderSanction, collateral * rules.ltvCaps.lapSecured);
   }
 
-  const safeCap = safeFoirCap(profile);
+  const safeCap = safeFoirCap(profile, rules);
   const maxByFoir = Math.max(0, normalized.income.effectiveIncome * safeCap - normalized.existingDebt);
   const maxBySurplus = Math.max(0, normalized.monthlyCashSurplus * rules.affordability.surplusRetainedPercent);
   const maxSafeEmi = Math.max(0, Math.min(maxByFoir, maxBySurplus));
-  const idealTenureMonths = pathway === 'LAP_SECURED' ? 84 : 36;
+  
+  const productConfig = rules.productBaselines[
+    pathway === 'LAP_SECURED' ? 'lapSecured' :
+    pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :
+    pathway === 'BUSINESS_LOAN' ? 'businessLoan' : 'personalLoan'
+  ];
+  const idealTenureMonths = productConfig.typicalTenuresMonths[1] || productConfig.typicalTenuresMonths[0] || 36;
   const safeBorrowerCapacity = roundCurrency(presentValueFromEmi(maxSafeEmi, fairRateHigh, idealTenureMonths));
 
   const guidance = safeBorrowerCapacity < lenderSanction

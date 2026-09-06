@@ -20,7 +20,7 @@ export interface FullAssessment {
 }
 
 export function runAssessment(profile: BorrowerProfile, rules: RuleConfig = DEFAULT_RULES): FullAssessment {
-  const normalized = normalizeBorrower(profile);
+  const normalized = normalizeBorrower(profile, rules);
   const pricing = calculatePricing(profile, rules);
   const capacity = calculateCapacities(profile, rules, pricing.fairRateMax);
   const decision = evaluateDecision(profile, rules, pricing.fairRateMax);

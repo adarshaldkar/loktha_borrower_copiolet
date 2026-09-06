@@ -42,7 +42,7 @@ export function calculateEmiOutput(
   fairRate: number,
   safeEmiCeiling: number,
 ): EmiResult {
-  const normalized = normalizeBorrower(profile);
+  const normalized = normalizeBorrower(profile, rules);
   const amount = Math.max(0, known<number>(profile.requestedAmount) ?? 0);
   const tenures = [24, 36, 60];
   const tenureRows = tenures.map((months) => {
@@ -64,9 +64,16 @@ export function calculateEmiOutput(
   const shockedSurplus = shockedIncome - normalized.existingDebt - safeEmiCeiling - normalized.livingCosts;
 
   const shockedRate = fairRate + rules.stressScenarios.rateShockBps / 100;
-  const shockedEmi = calculateEmi(Math.min(amount, Math.max(0, safeEmiCeiling * 36)), shockedRate, 36);
-  const baseEmi = calculateEmi(Math.min(amount, Math.max(0, safeEmiCeiling * 36)), fairRate, 36);
+  
+  const baselineAmount = amount > 0 ? amount : safeEmiCeiling * 36;
+  const affordableRow = tenureRows.find(row => row.emi <= safeEmiCeiling) || tenureRows[1] || tenureRows[0];
+  const shockTenure = affordableRow.months;
+  
+  const shockedEmi = calculateEmi(baselineAmount, shockedRate, shockTenure);
+  const baseEmi = calculateEmi(baselineAmount, fairRate, shockTenure);
   const emiIncrease = Math.max(0, shockedEmi - baseEmi);
+  
+  const surplusAfterShock = normalized.monthlyCashSurplus - shockedEmi;
 
   return {
     safeEmiCeiling: roundCurrency(safeEmiCeiling),
@@ -77,14 +84,14 @@ export function calculateEmiOutput(
         shockedIncome: roundCurrency(shockedIncome),
         shockedFoir: roundRate(shockedFoir),
         shockedSurplus: roundCurrency(shockedSurplus),
-        passes: shockedFoir <= 0.5 && shockedSurplus >= 0,
+        passes: shockedFoir <= rules.foirCaps.existingFoirCap && shockedSurplus >= 0,
       },
       rateShock: {
         shockedRate: roundRate(shockedRate),
         shockedEmi: roundCurrency(shockedEmi),
         emiIncrease: roundCurrency(emiIncrease),
-        surplusAfterShock: roundCurrency(normalized.monthlyCashSurplus - emiIncrease),
-        passes: normalized.monthlyCashSurplus - emiIncrease >= 0,
+        surplusAfterShock: roundCurrency(surplusAfterShock),
+        passes: surplusAfterShock >= 0,
       },
     },
   };

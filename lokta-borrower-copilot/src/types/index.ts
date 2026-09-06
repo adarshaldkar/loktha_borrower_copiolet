@@ -81,6 +81,18 @@ export interface RuleConfig {
     informalSafe: number;
     lenderStandardMax: number;
     lenderSecuredMax: number;
+    projectedFoirCap: number;
+    existingFoirCap: number;
+  };
+  ltvCaps: {
+    lapSecured: number;
+  };
+  incomeHaircuts: {
+    salaried: number;
+    informal: number;
+    selfEmployed: number;
+    selfReportedCashflow: number;
+    coApplicant: number;
   };
   productBaselines: {
     personalLoan: ProductRateRule;
@@ -98,6 +110,7 @@ export interface RuleConfig {
   stressScenarios: {
     incomeShockPercent: number;
     rateShockBps: number;
+    highCostDebtAprThreshold: number;
   };
   fees: {
     defaultProcessingFeePercent: number;
@@ -107,6 +120,8 @@ export interface RuleConfig {
   affordability: {
     surplusRetainedPercent: number;
     lifestyleAnnualIncomeLimit: number;
+    lowSavingsFoirHaircut: number;
+    productiveIncomeHaircut: number;
   };
 };
 

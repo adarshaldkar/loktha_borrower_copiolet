@@ -15,14 +15,16 @@ export interface LenderOffer {
   insuranceFee: number;
 }
 
-const fromAssessment = (assessment: FullAssessment): LenderOffer => ({
-  amount: assessment.o2.safeBorrowerCapacity,
-  nominalRate: assessment.o3.fairRateMax + 1.5,
-  tenureMonths: assessment.o4.tenureRows[1]?.months ?? 36,
-  processingFeePercent: assessment.o3.processingFeePercent,
-  documentationFee: assessment.o3.documentationFee,
-  insuranceFee: 0,
-});
+const fromAssessment = (assessment: FullAssessment): LenderOffer => {
+  return {
+    amount: 0,
+    nominalRate: assessment.o3.fairRateMax + 1.5,
+    tenureMonths: assessment.o4.tenureRows[1]?.months ?? 36,
+    processingFeePercent: assessment.o3.processingFeePercent,
+    documentationFee: assessment.o3.documentationFee,
+    insuranceFee: 0,
+  };
+};
 
 function clampMoney(value: number) {
   return Math.max(0, Math.round(value));
@@ -35,7 +37,12 @@ export function OfferComparator({ assessment, rules }: { assessment: FullAssessm
     setOffer(fromAssessment(assessment));
   }, [assessment]);
 
+  const hasValidAmount = offer.amount > 0;
+
   const comparison = useMemo(() => {
+    if (!hasValidAmount) {
+      return null;
+    }
     const amount = clampMoney(offer.amount);
     const processing = amount * Math.max(0, offer.processingFeePercent) / 100;
     const processingWithGst = processing * (1 + rules.fees.gstOnProcessingFeePercent / 100);
@@ -44,50 +51,58 @@ export function OfferComparator({ assessment, rules }: { assessment: FullAssessm
     const emi = calculateEmi(amount, offer.nominalRate, offer.tenureMonths);
     const apr = calculateAllInApr(net, emi, offer.tenureMonths);
     const withinFairRange = offer.nominalRate <= assessment.o3.fairRateMax + 0.25;
-    const emiSafe = emi <= assessment.o4.safeEmiCeiling;
+    const emiSafe = assessment.o4.safeEmiCeiling > 0 ? emi <= assessment.o4.safeEmiCeiling : false;
     const feeReasonable = offer.processingFeePercent <= assessment.o3.processingFeePercent;
     const overall = withinFairRange && emiSafe && feeReasonable;
     return { processingWithGst, upfront, net, emi, apr: roundRate(apr), withinFairRange, emiSafe, feeReasonable, overall };
-  }, [assessment, offer, rules]);
+  }, [assessment, offer, rules, hasValidAmount]);
 
   const reset = () => setOffer(fromAssessment(assessment));
 
   return (
     <section className="result-card offer-comparator">
       <div className="result-card-head">
-        <div><span className="kicker">Phase 5 · Optional input</span><h3>Compare a lender offer</h3></div>
+        <div><span className="kicker">Optional tool</span><h3>Compare a lender offer</h3></div>
         <Calculator size={22} />
       </div>
-      <p className="small-note">Enter an actual quote to compare the nominal rate, all-in APR, fees and monthly EMI against this borrower’s estimated fair range and safe ceiling.</p>
+      <p className="small-note">Enter an actual quote from a bank or lender to compare the nominal rate, all-in APR, upfront charges and monthly EMI against your safe guardrails.</p>
 
       <div className="offer-form">
-        <OfferInput label="Loan amount" value={offer.amount} onChange={(v) => setOffer({ ...offer, amount: v })} prefix="₹" />
-        <OfferInput label="Interest rate" value={offer.nominalRate} onChange={(v) => setOffer({ ...offer, nominalRate: v })} suffix="%" step="0.1" />
+        <OfferInput label="Quoted loan amount" value={offer.amount} onChange={(v) => setOffer({ ...offer, amount: v })} prefix="₹" />
+        <OfferInput label="Quoted interest rate" value={offer.nominalRate} onChange={(v) => setOffer({ ...offer, nominalRate: v })} suffix="%" step="0.1" />
         <OfferInput label="Tenure" value={offer.tenureMonths} onChange={(v) => setOffer({ ...offer, tenureMonths: Math.max(1, v) })} suffix="mo" step="1" />
         <OfferInput label="Processing fee" value={offer.processingFeePercent} onChange={(v) => setOffer({ ...offer, processingFeePercent: v })} suffix="%" step="0.1" />
         <OfferInput label="Documentation" value={offer.documentationFee} onChange={(v) => setOffer({ ...offer, documentationFee: v })} prefix="₹" />
         <OfferInput label="Insurance / other upfront" value={offer.insuranceFee} onChange={(v) => setOffer({ ...offer, insuranceFee: v })} prefix="₹" />
       </div>
 
-      <div className={`offer-verdict ${comparison.overall ? 'good' : 'watch'}`}>
-        <div><span className="kicker">Comparison result</span><strong>{comparison.overall ? 'Looks broadly within your guardrails' : 'Review this offer before accepting'}</strong></div>
-        <button className="ghost-btn" onClick={reset}><RotateCcw size={14} /> Reset example</button>
-      </div>
+      {!comparison ? (
+        <div className="offer-verdict watch">
+          <div><span className="kicker">Comparator standby</span><strong>Enter a valid lender quote amount above to compare</strong></div>
+        </div>
+      ) : (
+        <>
+          <div className={`offer-verdict ${comparison.overall ? 'good' : 'watch'}`}>
+            <div><span className="kicker">Comparison result</span><strong>{comparison.overall ? 'Looks broadly within your safe guardrails' : 'Review this offer carefully before accepting'}</strong></div>
+            <button className="ghost-btn" onClick={reset}><RotateCcw size={14} /> Reset</button>
+          </div>
 
-      <div className="offer-metric-grid">
-        <OfferMetric label="All-in APR" value={`${comparison.apr.toFixed(2)}%`} note={`Fair max ${assessment.o3.fairRateMax.toFixed(2)}%`} positive={comparison.withinFairRange} />
-        <OfferMetric label="Monthly EMI" value={money(comparison.emi)} note={`Safe max ${money(assessment.o4.safeEmiCeiling)}`} positive={comparison.emiSafe} />
-        <OfferMetric label="Upfront cost" value={money(comparison.upfront)} note={`Processing incl. GST ${money(comparison.processingWithGst)}`} positive={comparison.feeReasonable} />
-        <OfferMetric label="Net disbursed" value={money(comparison.net)} note={`From ${money(offer.amount)} principal`} positive />
-      </div>
+          <div className="offer-metric-grid">
+            <OfferMetric label="All-in APR" value={`${comparison.apr.toFixed(2)}%`} note={`Fair max ${assessment.o3.fairRateMax.toFixed(2)}%`} positive={comparison.withinFairRange} />
+            <OfferMetric label="Monthly EMI" value={money(comparison.emi)} note={`Safe max ${money(assessment.o4.safeEmiCeiling)}`} positive={comparison.emiSafe} />
+            <OfferMetric label="Upfront cost" value={money(comparison.upfront)} note={`Processing incl. GST ${money(comparison.processingWithGst)}`} positive={comparison.feeReasonable} />
+            <OfferMetric label="Net disbursed" value={money(comparison.net)} note={`From ${money(offer.amount)} principal`} positive />
+          </div>
 
-      <div className="offer-criteria">
-        <CheckLine ok={comparison.withinFairRange} text={comparison.withinFairRange ? 'Rate is within a small band of the estimated fair ceiling.' : 'Quoted rate is above the estimated fair ceiling.'} />
-        <CheckLine ok={comparison.feeReasonable} text={comparison.feeReasonable ? 'Processing fee is no higher than the configured benchmark.' : 'Processing fee is above the configured benchmark.'} />
-        <CheckLine ok={comparison.emiSafe} text={comparison.emiSafe ? 'Quoted EMI is within the borrower’s safe monthly ceiling.' : 'Quoted EMI exceeds the borrower’s safe monthly ceiling.'} />
-      </div>
+          <div className="offer-criteria">
+            <CheckLine ok={comparison.withinFairRange} text={comparison.withinFairRange ? 'Quoted rate is within the estimated fair ceiling.' : `Quoted rate (${offer.nominalRate}%) is above the estimated fair ceiling (${assessment.o3.fairRateMax.toFixed(2)}%).`} />
+            <CheckLine ok={comparison.feeReasonable} text={comparison.feeReasonable ? 'Processing fee is at or below benchmark.' : `Processing fee (${offer.processingFeePercent}%) exceeds standard benchmark (${assessment.o3.processingFeePercent}%).`} />
+            <CheckLine ok={comparison.emiSafe} text={comparison.emiSafe ? 'Quoted EMI is within the borrower’s safe monthly ceiling.' : assessment.o4.safeEmiCeiling === 0 ? 'Safe capacity is ₹0 (restructuring required before new borrowing).' : `Quoted EMI (${money(comparison.emi)}) exceeds safe ceiling (${money(assessment.o4.safeEmiCeiling)}).`} />
+          </div>
 
-      <div className="numbers-note offer-next"><strong>Negotiation move.</strong> Ask the lender to reduce whichever metric is the largest gap first: rate, upfront fees or EMI.</div>
+          <div className="numbers-note offer-next"><strong>Negotiation move.</strong> Counter the lender on the biggest gap first: reduce upfront fees, lower the interest rate, or reject bundled insurance.</div>
+        </>
+      )}
     </section>
   );
 }

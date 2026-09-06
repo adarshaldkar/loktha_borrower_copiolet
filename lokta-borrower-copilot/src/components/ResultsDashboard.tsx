@@ -6,7 +6,10 @@ import type { ExplanationTrace } from '../engine/explainability';
 import { ExplainabilityModal } from './ExplainabilityModal';
 
 const money = (value: number) => `₹${Math.round(value).toLocaleString('en-IN')}`;
-const percent = (value: number) => `${value.toFixed(1)}%`;
+const formatRatioPercent = (ratio: number) => {
+  if (!Number.isFinite(ratio)) return 'N/A';
+  return `${(ratio * 100).toFixed(1)}%`;
+};
 const labelize = (value: string) => value.replaceAll('_', ' ');
 
 export function ResultsDashboard({ assessment }: { assessment: FullAssessment }) {
@@ -39,9 +42,9 @@ export function ResultsDashboard({ assessment }: { assessment: FullAssessment })
           </div>
           <p className="result-lede">{assessment.o1.reason}</p>
           <div className="decision-stats">
-            <MiniStat label="Current FOIR" value={percent(assessment.normalized.currentFoir)} />
-            <MiniStat label="Projected FOIR" value={percent(assessment.o1.projectedFoir)} />
-            <MiniStat label="Safe FOIR cap" value={percent(assessment.o1.safeFoirCap * 100)} />
+            <MiniStat label="Current FOIR" value={formatRatioPercent(assessment.normalized.currentFoir)} />
+            <MiniStat label="Projected FOIR" value={formatRatioPercent(assessment.o1.projectedFoir)} />
+            <MiniStat label="Safe FOIR cap" value={formatRatioPercent(assessment.o1.safeFoirCap)} />
           </div>
           <WhyButton onClick={() => openTrace('o1')} />
         </article>
@@ -55,7 +58,15 @@ export function ResultsDashboard({ assessment }: { assessment: FullAssessment })
             <CapacityMeter label="Estimated lender capacity" value={assessment.o2.lenderSanction} max={Math.max(assessment.o2.lenderSanction, assessment.o2.safeBorrowerCapacity)} tone="lender" />
             <CapacityMeter label="Safe borrower capacity" value={assessment.o2.safeBorrowerCapacity} max={Math.max(assessment.o2.lenderSanction, assessment.o2.safeBorrowerCapacity)} tone="safe" />
           </div>
-          <div className="guidance-box"><strong>Use this number: {money(assessment.o2.safeBorrowerCapacity)}</strong><span>{assessment.o2.guidance}</span></div>
+          <div className="guidance-box">
+            <strong>Use this number: {money(assessment.o2.safeBorrowerCapacity)}</strong>
+            <span>{assessment.o2.guidance}</span>
+            {assessment.o2.safeBorrowerCapacity > 0 && (
+              <div style={{ marginTop: '0.45rem', fontSize: '0.8rem', color: 'var(--accent)', borderTop: '1px dashed var(--rule)', paddingTop: '0.4rem', fontWeight: 500 }}>
+                {money(assessment.o4.safeEmiCeiling)} safe monthly EMI → approximately {money(assessment.o2.safeBorrowerCapacity)} safe borrowing capacity at {assessment.o3.fairRateMax.toFixed(2)}% over {assessment.o2.idealTenureMonths} mo.
+              </div>
+            )}
+          </div>
           <div className="why-row">
             <WhyButton label="Why lender estimate?" onClick={() => openTrace('o2-lender')} />
             <WhyButton label="Why safe capacity?" onClick={() => openTrace('o2-safe')} />
@@ -75,7 +86,8 @@ export function ResultsDashboard({ assessment }: { assessment: FullAssessment })
           </div>
           <div className="fee-table">
             <Row label="Nominal rate used" value={`${assessment.o3.nominalRateUsedForApr.toFixed(2)}%`} />
-            <Row label={`Processing fee (${assessment.o3.processingFeePercent.toFixed(2)}%)`} value={money(Math.max(0, assessment.o3.upfrontCharges - assessment.o3.documentationFee))} />
+            <Row label={`Processing fee (base @ ${assessment.o3.processingFeePercent.toFixed(2)}%)`} value={money(assessment.o4.chosenAmount > 0 ? assessment.o4.chosenAmount * assessment.o3.processingFeePercent / 100 : assessment.o2.safeBorrowerCapacity * assessment.o3.processingFeePercent / 100)} />
+            <Row label="GST on processing" value={money(assessment.o4.chosenAmount > 0 ? (assessment.o4.chosenAmount * assessment.o3.processingFeePercent / 100) * 0.18 : (assessment.o2.safeBorrowerCapacity * assessment.o3.processingFeePercent / 100) * 0.18)} />
             <Row label="Documentation fee" value={money(assessment.o3.documentationFee)} />
             <Row label="Upfront charges" value={money(assessment.o3.upfrontCharges)} />
             <Row label="Net disbursement" value={money(assessment.o3.netDisbursement)} />
@@ -85,7 +97,7 @@ export function ResultsDashboard({ assessment }: { assessment: FullAssessment })
             <WhyButton label="Why fair rate?" onClick={() => openTrace('o3-rate')} />
             <WhyButton label="Why APR?" onClick={() => openTrace('o3-apr')} />
           </div>
-          <p className="small-note">{assessment.o3.pricingConfidenceNote} This is an estimate, not a guaranteed lender quote.</p>
+          <p className="small-note">{assessment.o3.pricingConfidenceNote} Estimated fair rate — not a guaranteed lender quote.</p>
         </article>
 
         <article className="result-card">
@@ -94,6 +106,9 @@ export function ResultsDashboard({ assessment }: { assessment: FullAssessment })
             <div className="emi-hero">{money(assessment.o4.safeEmiCeiling)}<span>/ month</span></div>
           </div>
           <div className="emi-rail"><div style={{ width: `${Math.min(100, assessment.o4.safeEmiCeiling > 0 ? 100 : 0)}%` }}></div></div>
+          <div className="tenure-table-caption" style={{ fontSize: '0.82rem', color: '#555', marginBottom: '0.4rem', fontWeight: 500 }}>
+            For a {money(assessment.o4.chosenAmount)} requested loan:
+          </div>
           <div className="tenure-table">
             <div className="table-row table-head"><span>Tenure</span><span>EMI</span><span>Interest</span><span>Outflow</span></div>
             {assessment.o4.tenureRows.map((row) => (
@@ -115,15 +130,15 @@ export function ResultsDashboard({ assessment }: { assessment: FullAssessment })
           </div>
         </div>
         <div className="stress-grid">
-          <StressBox icon={<AlertTriangle size={19} />} title={`Income −${Math.round(assessment.o4.stress.incomeShock.shockedIncome / Math.max(assessment.normalized.income.effectiveIncome, 1) * 100 - 100) * -1}%`} ok={assessment.o4.stress.incomeShock.passes}>
+          <StressBox icon={<AlertTriangle size={19} />} title="Income −20% shock" ok={assessment.o4.stress.incomeShock.passes}>
             <span>Income becomes {money(assessment.o4.stress.incomeShock.shockedIncome)}</span>
-            <strong>{percent(assessment.o4.stress.incomeShock.shockedFoir)} projected FOIR</strong>
-            <span>Surplus after debt + living: {money(assessment.o4.stress.incomeShock.shockedSurplus)}</span>
+            <strong>Surplus: {money(assessment.o4.stress.incomeShock.shockedSurplus)} ({assessment.o4.stress.incomeShock.passes ? 'Resilient' : 'Deficit / Unsafe'})</strong>
+            <span>Projected debt FOIR: {assessment.o4.stress.incomeShock.shockedFoir < 5 ? formatRatioPercent(assessment.o4.stress.incomeShock.shockedFoir) : 'Exceeded'}</span>
           </StressBox>
-          <StressBox icon={<CircleHelp size={19} />} title={`Rate +${assessment.o4.stress.rateShock.shockedRate - assessment.o3.nominalRateUsedForApr} pts`} ok={assessment.o4.stress.rateShock.passes}>
+          <StressBox icon={<CircleHelp size={19} />} title={`Rate +${(assessment.o4.stress.rateShock.shockedRate - assessment.o3.nominalRateUsedForApr).toFixed(2)} percentage points`} ok={assessment.o4.stress.rateShock.passes}>
             <span>Shocked rate: {assessment.o4.stress.rateShock.shockedRate.toFixed(2)}%</span>
-            <strong>EMI increase: {money(assessment.o4.stress.rateShock.emiIncrease)}</strong>
-            <span>Surplus after shock: {money(assessment.o4.stress.rateShock.surplusAfterShock)}</span>
+            <strong>EMI increase: +{money(assessment.o4.stress.rateShock.emiIncrease)}/mo</strong>
+            <span>Surplus after shock: {money(assessment.o4.stress.rateShock.surplusAfterShock)} ({assessment.o4.stress.rateShock.passes ? 'Passes' : 'Deficit'})</span>
           </StressBox>
         </div>
         {stressMode && <div className="stress-focus">{stressMode === 'income' ? 'Income shock is the conservative resilience check: a temporary earnings drop should not push the borrower into unaffordable debt service.' : 'Rate shock shows how a floating-rate change can affect monthly outflow even when the starting quote looked affordable.'}</div>}

@@ -13,7 +13,10 @@ export interface ExplanationTrace {
 }
 
 const money = (value: number) => `₹${Math.round(value).toLocaleString('en-IN')}`;
-const percent = (value: number) => `${value.toFixed(1)}%`;
+const formatRatioPercent = (ratio: number) => {
+  if (!Number.isFinite(ratio)) return 'N/A';
+  return `${(ratio * 100).toFixed(1)}%`;
+};
 
 export function buildExplainability(
   normalized: NormalizedProfile,
@@ -28,7 +31,7 @@ export function buildExplainability(
       label: 'O1 Decision',
       value: decision.verdict,
       reason: decision.reason,
-      math: `Current FOIR ${percent(normalized.currentFoir)}; projected FOIR ${percent(decision.projectedFoir)}; monthly surplus ${money(normalized.monthlyCashSurplus)}.`,
+      math: `Current FOIR ${formatRatioPercent(normalized.currentFoir)}; projected FOIR ${formatRatioPercent(decision.projectedFoir)}; monthly surplus ${money(normalized.monthlyCashSurplus)}.`,
     },
     {
       id: 'o2-lender',
@@ -68,7 +71,7 @@ export function buildExplainability(
     {
       id: 'o4-stress-income',
       label: 'Income shock',
-      value: `${percent(emi.stress.incomeShock.shockedFoir)} projected FOIR`,
+      value: `${formatRatioPercent(emi.stress.incomeShock.shockedFoir)} projected FOIR`,
       reason: emi.stress.incomeShock.passes ? 'The borrower remains inside the configured stress boundary.' : 'The income shock breaks the configured affordability boundary.',
       math: `Income reduced to ${money(emi.stress.incomeShock.shockedIncome)}; compare shocked FOIR and surplus.`,
     },

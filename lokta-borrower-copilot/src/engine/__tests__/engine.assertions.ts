@@ -53,6 +53,10 @@ export function runDevelopmentAssertions(): void {
   const ravi = runAssessment(TEST_PROFILES.ravi, DEFAULT_RULES);
   const anita = runAssessment(TEST_PROFILES.anita, DEFAULT_RULES);
 
+  console.assert(priya.confidence.rating === 'HIGH', 'Priya should have HIGH confidence.');
+  console.assert(ravi.confidence.rating === 'MEDIUM', 'Ravi should have MEDIUM confidence.');
+  console.assert(anita.confidence.rating === 'LOW', 'Anita should have LOW confidence.');
+
   console.assert(priya.o2.safeBorrowerCapacity <= priya.o2.lenderSanction, 'Priya should have distinct lender vs safe capacity.');
   console.assert(ravi.o2.pathway === 'LAP_SECURED', 'Ravi should route to secured pathway.');
   console.assert(anita.o1.verdict === 'RESTRUCTURE_FIRST', 'Anita should trigger the highest-priority debt stress rule.');

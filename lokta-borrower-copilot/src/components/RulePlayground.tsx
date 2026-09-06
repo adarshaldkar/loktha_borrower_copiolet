@@ -16,7 +16,7 @@ export function RulePlayground() {
   return (
     <section className="rule-playground no-print">
       <div className="playground-head">
-        <div><span className="kicker">Phase 5 · Interview mode</span><h2>Live rule playground</h2><p>Change a core assumption and watch the same deterministic engine recompute the current borrower instantly.</p></div>
+        <div><span className="kicker">Interview mode</span><h2>Live rule playground</h2><p>Change a core assumption and watch the same deterministic engine recompute the current borrower instantly.</p></div>
         <SlidersHorizontal size={22} />
       </div>
       <div className="playground-grid">

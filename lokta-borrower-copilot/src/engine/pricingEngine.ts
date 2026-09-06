@@ -70,8 +70,8 @@ export function calculatePricing(profile: BorrowerProfile, rules: RuleConfig): P
   const allInApr = calculateAllInApr(netDisbursement, emi, tenure);
 
   const pricingConfidenceNote = known<string>(profile.creditScoreBand) === 'UNKNOWN'
-    ? 'Credit score is unknown, so the fair-rate band is intentionally wider.'
-    : 'Rate band is based on product baseline plus the configured profile adjustments.';
+    ? 'Unverified credit score expands the fair-rate uncertainty band.'
+    : 'Rate band reflects profile benchmarks and stability adjustments.';
 
   return {
     pathway,

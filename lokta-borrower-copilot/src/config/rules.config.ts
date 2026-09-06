@@ -13,6 +13,20 @@ export const DEFAULT_RULES: RuleConfig = {
     informalSafe: 0.25,
     lenderStandardMax: 0.50,
     lenderSecuredMax: 0.60,
+    projectedFoirCap: 0.40,
+    existingFoirCap: 0.50,
+  },
+
+  ltvCaps: {
+    lapSecured: 0.50,
+  },
+
+  incomeHaircuts: {
+    salaried: 1.0,
+    informal: 0.65,
+    selfEmployed: 0.50,
+    selfReportedCashflow: 0.50,
+    coApplicant: 1.0,
   },
 
   productBaselines: {
@@ -53,6 +67,7 @@ export const DEFAULT_RULES: RuleConfig = {
   stressScenarios: {
     incomeShockPercent: 0.20,
     rateShockBps: 200,
+    highCostDebtAprThreshold: 24,
   },
 
   fees: {
@@ -64,5 +79,7 @@ export const DEFAULT_RULES: RuleConfig = {
   affordability: {
     surplusRetainedPercent: 0.60,
     lifestyleAnnualIncomeLimit: 0.25,
+    lowSavingsFoirHaircut: 0.05,
+    productiveIncomeHaircut: 0.50,
   },
 };
