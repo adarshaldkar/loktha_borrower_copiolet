@@ -45,7 +45,7 @@ export function calculateEmiOutput(
 ): EmiResult {
   const normalized = normalizeBorrower(profile, rules);
   const amount = Math.max(0, known<number>(profile.requestedAmount) ?? 0);
-  const pathway = routeProduct(profile);
+  const pathway = routeProduct(profile, rules);
   const productConfig = rules.productBaselines[
     pathway === 'LAP_SECURED' ? 'lapSecured' :
     pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :

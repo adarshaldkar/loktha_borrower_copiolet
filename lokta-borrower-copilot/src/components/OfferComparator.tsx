@@ -54,11 +54,13 @@ export function OfferComparator({ assessment, rules }: { assessment: FullAssessm
     const net = Math.max(0, amount - upfront);
     const emi = calculateEmi(amount, nominalRate, tenureMonths);
     const apr = calculateAllInApr(net, emi, tenureMonths);
-    const withinFairRange = nominalRate <= assessment.o3.fairRateMax + 0.25;
+    const belowBenchmark = nominalRate < assessment.o3.fairRateMin - 0.25;
+    const aboveBenchmark = nominalRate > assessment.o3.fairRateMax + 0.25;
+    const withinFairRange = !aboveBenchmark;
     const emiSafe = assessment.o4.safeEmiCeiling > 0 ? emi <= assessment.o4.safeEmiCeiling : false;
     const feeReasonable = feePct <= assessment.o3.processingFeePercent;
     const overall = withinFairRange && emiSafe && feeReasonable;
-    return { processingWithGst, upfront, net, emi, apr: roundRate(apr), withinFairRange, emiSafe, feeReasonable, overall, nominalRate, feePct };
+    return { processingWithGst, upfront, net, emi, apr: roundRate(apr), withinFairRange, belowBenchmark, aboveBenchmark, emiSafe, feeReasonable, overall, nominalRate, feePct };
   }, [assessment, offer, rules, hasValidAmount]);
 
   const reset = () => setOffer(emptyOffer());
@@ -99,7 +101,16 @@ export function OfferComparator({ assessment, rules }: { assessment: FullAssessm
           </div>
 
           <div className="offer-criteria">
-            <CheckLine ok={comparison.withinFairRange} text={comparison.withinFairRange ? 'Quoted rate is within the estimated fair ceiling.' : `Quoted rate (${comparison.nominalRate}%) is above the estimated fair ceiling (${assessment.o3.fairRateMax.toFixed(2)}%).`} />
+            <CheckLine
+              ok={!comparison.aboveBenchmark}
+              text={
+                comparison.belowBenchmark
+                  ? `Quoted rate (${comparison.nominalRate}%) is below fair benchmark floor (${assessment.o3.fairRateMin.toFixed(2)}%) — check for promotional teaser periods or floating resets.`
+                  : comparison.aboveBenchmark
+                  ? `Quoted rate (${comparison.nominalRate}%) exceeds fair ceiling (${assessment.o3.fairRateMax.toFixed(2)}%).`
+                  : `Quoted rate (${comparison.nominalRate}%) is within estimated fair range (${assessment.o3.fairRateMin.toFixed(2)}%–${assessment.o3.fairRateMax.toFixed(2)}%).`
+              }
+            />
             <CheckLine ok={comparison.feeReasonable} text={comparison.feeReasonable ? 'Processing fee is at or below benchmark.' : `Processing fee (${comparison.feePct}%) exceeds standard benchmark (${assessment.o3.processingFeePercent}%).`} />
             <CheckLine ok={comparison.emiSafe} text={comparison.emiSafe ? 'Quoted EMI is within the borrower’s safe monthly ceiling.' : assessment.o4.safeEmiCeiling === 0 ? 'Safe capacity is ₹0 (restructuring required before new borrowing).' : `Quoted EMI (${money(comparison.emi)}) exceeds safe ceiling (${money(assessment.o4.safeEmiCeiling)}).`} />
           </div>

@@ -128,6 +128,8 @@ export interface RuleConfig {
     lifestyleAnnualIncomeLimit: number;
     lowSavingsFoirHaircut: number;
     productiveIncomeHaircut: number;
+    corporateStabilityDiscountPercent: number;
+    lapCollateralMinimum: number;
   };
 };
 

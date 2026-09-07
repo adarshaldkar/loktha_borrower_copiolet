@@ -43,12 +43,12 @@ function cibilAdjustment(profile: BorrowerProfile, rules: RuleConfig): RateAdjus
 }
 
 export function calculatePricing(profile: BorrowerProfile, rules: RuleConfig): PricingResult {
-  const pathway = routeProduct(profile);
+  const pathway = routeProduct(profile, rules);
   const product = rateRuleFor(pathway, rules);
   const adjustment = cibilAdjustment(profile, rules);
   const yearsAtEmployer = known<number>(profile.yearsAtCurrentEmployer) ?? 0;
   const collateral = known<number>(profile.unencumberedCollateralValue) ?? 0;
-  const stabilityDiscount = yearsAtEmployer >= 3 ? 0.5 : 0;
+  const stabilityDiscount = yearsAtEmployer >= 3 ? (rules.affordability.corporateStabilityDiscountPercent ?? 0.5) : 0;
   const collateralDiscount = pathway === 'LAP_SECURED' && collateral > 0 ? 1.0 : 0;
 
   let min = product.minRate + adjustment.rateDelta - stabilityDiscount - collateralDiscount;

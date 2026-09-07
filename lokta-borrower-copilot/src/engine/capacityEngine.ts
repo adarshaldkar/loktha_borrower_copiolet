@@ -1,3 +1,4 @@
+import { DEFAULT_RULES } from '../config/rules.config';
 import type { BorrowerProfile, ProductPathway, RuleConfig } from '../types';
 import { calculateEmi, presentValueFromEmi, roundCurrency } from './math';
 import { normalizeBorrower, safeFoirCap } from './normalizer';
@@ -16,12 +17,13 @@ function known<T>(field: any): T | undefined {
   return field?.status === 'KNOWN' ? field.value : undefined;
 }
 
-export function routeProduct(profile: BorrowerProfile): ProductPathway {
+export function routeProduct(profile: BorrowerProfile, rules: RuleConfig = DEFAULT_RULES): ProductPathway {
   const purpose = known<string>(profile.loanPurpose);
   const collateral = known<number>(profile.unencumberedCollateralValue) ?? 0;
+  const lapMin = rules.affordability.lapCollateralMinimum ?? 1000000;
   if (purpose === 'HOME_PURCHASE') return 'HOME_LOAN';
   if (purpose === 'GOLD_JEWELLERY') return 'GOLD_LOAN';
-  if ((purpose === 'LAP_PROPERTY' || (purpose === 'KIRANA_STOCK_VEHICLE' && collateral > 0)) && collateral > 0) {
+  if ((purpose === 'LAP_PROPERTY' || (purpose === 'KIRANA_STOCK_VEHICLE' && collateral >= lapMin)) && collateral >= lapMin) {
     return 'LAP_SECURED';
   }
   if (purpose === 'TWO_WHEELER_EV') return 'TWO_WHEELER_EV';
@@ -46,7 +48,7 @@ export function calculateCapacities(
   fairRateHigh: number,
 ): CapacityResult {
   const normalized = normalizeBorrower(profile, rules);
-  const pathway = routeProduct(profile);
+  const pathway = routeProduct(profile, rules);
   const lenderCap = pathway === 'LAP_SECURED' ? rules.foirCaps.lenderSecuredMax : rules.foirCaps.lenderStandardMax;
   const statedIncome = Math.max(normalized.income.primaryNetIncome, normalized.income.effectiveIncome);
   const maxLenderEmi = Math.max(0, statedIncome * lenderCap - normalized.existingDebt);

@@ -93,5 +93,7 @@ export const DEFAULT_RULES: RuleConfig = {
     lifestyleAnnualIncomeLimit: 0.25,
     lowSavingsFoirHaircut: 0.05,
     productiveIncomeHaircut: 0.50,
+    corporateStabilityDiscountPercent: 0.50,
+    lapCollateralMinimum: 1000000,
   },
 };

@@ -33,7 +33,7 @@ export function evaluateDecision(
   const highCostApr = known(profile.highCostDebtApr);
   const recentBounce = known(profile.recentEmiBounce) ?? false;
   
-  const pathway = routeProduct(profile);
+  const pathway = routeProduct(profile, rules);
   const productConfig = rules.productBaselines[
     pathway === 'LAP_SECURED' ? 'lapSecured' :
     pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :
