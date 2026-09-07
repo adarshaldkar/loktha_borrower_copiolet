@@ -1,5 +1,7 @@
 # LOKTA BORROWER COPILOT — THREE BORROWER RUN-THROUGHS (`PERSONAS_RUNTHROUGH.md`)
 
+> **Note on Live Dynamic Execution**: These figures are a captured benchmark run from the current main revision; the application recalculates them dynamically for arbitrary user inputs and session rule adjustments.
+
 This document records the exact questions asked, computed outputs, and Negotiation Cards generated for the three benchmark test personas: **Priya**, **Ravi**, and **Anita**. Every figure below is computed deterministically by the live financial engine.
 
 ---
@@ -67,7 +69,7 @@ This document records the exact questions asked, computed outputs, and Negotiati
 * **Spouse Income**: ₹18,000 teaching (Recognized: ₹18,000)
 * **Productive Income Potential**: ₹12,000 from stock expansion (Recognized at 50%: ₹6,000)
 * **Effective Recognized Income**: ₹47,500 + ₹18,000 + ₹6,000 = **₹71,500 / month**
-* **Unencumbered Property Collateral**: ₹45,00,000 commercial shop premises
+* **Unencumbered Property Collateral**: ₹45,00,000 commercial shop premises ($\ge ₹10L$ routing threshold)
 * **Credit Score Band**: Unknown (No formal bureau history)
 * **Existing Debt**: ₹0 / month
 * **Essential Living Costs**: ₹18,000 / month
@@ -83,9 +85,12 @@ This document records the exact questions asked, computed outputs, and Negotiati
    * *Verdict*: `BORROW`
    * *Headline Reason*: The requested ₹15,00,000 loan stays within your ₹16,92,700 safe capacity and current cashflow is resilient.
    * *FOIR Metrics*: Current FOIR: **0.0%** | Projected FOIR: **31.0%** | Safe FOIR Cap: **35.0%**
-2. **O2 Capacity**:
-   * *Estimated Lender Capacity (LAP)*: **₹22,50,000** (capped at 50% LTV of ₹45L commercial property).
-   * *Safe Borrower Capacity*: **₹16,92,700** (amortized over 120 months under LAP norms).
+2. **O2 Capacity (Explicit Formula)**:
+   * *Lender Capacity Formula*: $\text{Lender Capacity} = \min(\text{FOIR-based Max Sanction}, \text{LTV Collateral Cap})$
+     * *FOIR-based Max Sanction* ($60\%$ FOIR @ $8.75\%$ over $120\text{ mo}$): **₹29,35,000**
+     * *LTV Collateral Cap* ($50\%$ LTV of $₹45\text{L}$): **₹22,50,000**
+     * *Resulting Estimated Lender Capacity*: $\min(₹29.35\text{L}, ₹22.50\text{L}) =$ **₹22,50,000**
+   * *Safe Borrower Capacity*: **₹16,92,700** (amortized over 120 months under LAP norms preserving cash buffers).
    * *Guidance*: "Use this number: ₹16,92,700. ₹25,000 safe monthly EMI → approximately ₹16,92,700 safe borrowing capacity at 12.75% over 120 mo."
 3. **O3 Pricing & True Cost**:
    * *Product Pathway*: **Loan Against Property (LAP Secured)**
@@ -140,10 +145,11 @@ This document records the exact questions asked, computed outputs, and Negotiati
    * *Verdict*: `RESTRUCTURE_FIRST`
    * *Headline Reason*: Recent repayment stress combined with high-cost debt (30% APR) makes new unsecured borrowing unsafe.
    * *FOIR Metrics*: Current FOIR: **16.1%** | Projected FOIR: **41.0%** | Safe FOIR Cap: **20.0%**
-2. **O2 Capacity**:
+2. **O2 Capacity (Pre-Safety vs Actionable Borrowing Capacity)**:
    * *Estimated Lender Capacity (Digital Apps)*: **₹4,82,900** (predatory digital app limit).
-   * *Safe Borrower Capacity*: **₹23,300** (Immediate safe new borrowing is **₹0** until 30% APR debt is closed).
-   * *Guidance*: "Use this number: ₹23,300. Restructuring recommended: Clear high-cost 30% APR debt first before taking on new liabilities."
+   * *Pre-Safety Mathematical Cashflow Capacity*: **₹23,300** (nominal cashflow capacity before risk override).
+   * *Actionable Safe New-Borrowing Capacity*: **₹0** (Restructuring priority: New unsecured borrowing is unsafe while active 30% APR debt and repayment stress persist).
+   * *Guidance*: "Use this number: ₹0. Restructuring recommended: Clear high-cost 30% APR debt first before taking on any new liabilities."
 3. **O3 Pricing & True Cost**:
    * *Product Pathway*: **Two-Wheeler / EV Financing**
    * *Fair Rate Band*: **12.00% – 17.75%** (Subsidized asset loan benchmark with unknown score spread)

@@ -20,7 +20,7 @@ export function calculateConfidence(profile: BorrowerProfile, rules: RuleConfig 
   if (missingProfit) flags.push('undocumented business profits');
   if (hasHighCostDebt) flags.push('active high-cost debt');
 
-  const hasCollateral = profile.unencumberedCollateralValue?.status === 'KNOWN' && (profile.unencumberedCollateralValue.value ?? 0) > 0;
+  const hasCollateral = profile.unencumberedCollateralValue?.status === 'KNOWN' && (profile.unencumberedCollateralValue.value ?? 0) >= (rules.affordability.lapCollateralMinimum ?? 1000000);
   const hasDocumentedProfit = profile.documentedMonthlyProfit?.status === 'KNOWN' && (profile.documentedMonthlyProfit.value ?? 0) > 0;
 
   if (isInformal && isCreditUnknown && recentBounce) {
