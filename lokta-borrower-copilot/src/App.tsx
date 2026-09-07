@@ -64,7 +64,7 @@ export default function App() {
 
       {assessment && <>
         <ResultsDashboard assessment={assessment} />
-        <div className="phase5-grid">
+        <div className="tools-grid">
           <OfferComparator assessment={assessment} rules={rules} />
           <NegotiationCard profile={profile} assessment={assessment} />
         </div>

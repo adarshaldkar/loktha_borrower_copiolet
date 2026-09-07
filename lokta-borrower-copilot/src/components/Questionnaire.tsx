@@ -19,6 +19,8 @@ export function Questionnaire() {
 
   const tier1 = questions.filter((q) => q.tier === 1);
   const tier2 = questions.filter((q) => q.tier === 2);
+  const hasBranch = profile.employmentType?.status === 'KNOWN';
+  const pillText = hasBranch ? `${tier2.length} follow-ups unlocked` : 'Core questions only';
 
   return (
     <section className="panel questionnaire">
@@ -27,7 +29,7 @@ export function Questionnaire() {
           <span className="kicker">01 · Adaptive intake</span>
           <h2>Tell us about the borrowing decision.</h2>
         </div>
-        <span className="pill">{tier2.length} follow-ups unlocked</span>
+        <span className="pill">{pillText}</span>
       </div>
       <div className="question-grid">
         {tier1.map((question) => <Question key={question.id} question={question} profile={profile} setField={setField} setUnknown={setUnknown} />)}

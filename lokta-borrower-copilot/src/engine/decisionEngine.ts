@@ -16,7 +16,14 @@ function known<T>(field: { status: 'KNOWN'; value: T } | { status: 'UNKNOWN' } |
   return field?.status === 'KNOWN' ? field.value : undefined;
 }
 
-export function evaluateDecision(profile: BorrowerProfile, rules: RuleConfig, fairRateHigh: number): DecisionResult {
+const money = (value: number) => `₹${Math.round(value).toLocaleString('en-IN')}`;
+
+export function evaluateDecision(
+  profile: BorrowerProfile,
+  rules: RuleConfig,
+  fairRateHigh: number,
+  safeBorrowerCapacity?: number,
+): DecisionResult {
   const normalized = normalizeBorrower(profile, rules);
   const requested = known(profile.requestedAmount) ?? 0;
   const purpose = known(profile.loanPurpose);
@@ -69,12 +76,18 @@ export function evaluateDecision(profile: BorrowerProfile, rules: RuleConfig, fa
   const lifestyleAskTooLarge =
     (purpose === 'WEDDING_LIFESTYLE' || purpose === 'GENERAL_PERSONAL') && requested > annualIncome * rules.affordability.lifestyleAnnualIncomeLimit;
 
-  if (projectedFoir > rules.foirCaps.projectedFoirCap || lifestyleAskTooLarge) {
+  const exceedsSafeCapacity = safeBorrowerCapacity !== undefined && requested > safeBorrowerCapacity;
+
+  if (exceedsSafeCapacity || projectedFoir > rules.foirCaps.projectedFoirCap || lifestyleAskTooLarge) {
+    if (exceedsSafeCapacity) flags.push('REQUESTED_EXCEEDS_SAFE_CAPACITY');
     if (projectedFoir > rules.foirCaps.projectedFoirCap) flags.push(`PROJECTED_FOIR_ABOVE_${Math.round(rules.foirCaps.projectedFoirCap * 100)}`);
     if (lifestyleAskTooLarge) flags.push('LIFESTYLE_LOAN_ABOVE_ANNUAL_INCOME_LIMIT');
+    
     return {
       verdict: 'BORROW_LESS',
-      reason: projectedFoir > rules.foirCaps.projectedFoirCap
+      reason: exceedsSafeCapacity && safeBorrowerCapacity !== undefined
+        ? `The requested ${money(requested)} loan exceeds your safe borrowing capacity of ${money(safeBorrowerCapacity)}.`
+        : projectedFoir > rules.foirCaps.projectedFoirCap
         ? 'The requested loan would push total debt service above the conservative affordability range.'
         : 'The requested amount is large relative to annual income for a non-productive personal expense.',
       priority: 3,
@@ -86,7 +99,9 @@ export function evaluateDecision(profile: BorrowerProfile, rules: RuleConfig, fa
 
   return {
     verdict: 'BORROW',
-    reason: 'The requested loan stays within the configured affordability checks and current cashflow is positive.',
+    reason: safeBorrowerCapacity !== undefined
+      ? `The requested ${money(requested)} loan stays within your ${money(safeBorrowerCapacity)} safe capacity and current cashflow is resilient.`
+      : 'The requested loan stays within the configured affordability checks and current cashflow is resilient.',
     priority: 4,
     flags,
     projectedFoir,
