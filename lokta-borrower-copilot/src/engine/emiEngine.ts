@@ -49,7 +49,9 @@ export function calculateEmiOutput(
   const productConfig = rules.productBaselines[
     pathway === 'LAP_SECURED' ? 'lapSecured' :
     pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :
-    pathway === 'BUSINESS_LOAN' ? 'businessLoan' : 'personalLoan'
+    pathway === 'BUSINESS_LOAN' ? 'businessLoan' :
+    pathway === 'HOME_LOAN' ? 'homeLoan' :
+    pathway === 'GOLD_LOAN' ? 'goldLoan' : 'personalLoan'
   ];
   const tenures = productConfig.typicalTenuresMonths.length > 0 ? productConfig.typicalTenuresMonths : [24, 36, 60];
   const tenureRows = tenures.map((months) => {

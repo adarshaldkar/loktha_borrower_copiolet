@@ -30,7 +30,9 @@ export function evaluateDecision(profile: BorrowerProfile, rules: RuleConfig, fa
   const productConfig = rules.productBaselines[
     pathway === 'LAP_SECURED' ? 'lapSecured' :
     pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :
-    pathway === 'BUSINESS_LOAN' ? 'businessLoan' : 'personalLoan'
+    pathway === 'BUSINESS_LOAN' ? 'businessLoan' :
+    pathway === 'HOME_LOAN' ? 'homeLoan' :
+    pathway === 'GOLD_LOAN' ? 'goldLoan' : 'personalLoan'
   ];
   const requestedTenure = productConfig.typicalTenuresMonths[1] || productConfig.typicalTenuresMonths[0] || 36;
   const requestedEmi = calculateEmi(requested, fairRateHigh, requestedTenure);

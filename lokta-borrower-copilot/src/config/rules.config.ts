@@ -54,6 +54,18 @@ export const DEFAULT_RULES: RuleConfig = {
       defaultFeePercent: 2.0,
       typicalTenuresMonths: [24, 36, 60],
     },
+    homeLoan: {
+      minRate: 8.4,
+      maxRate: 9.8,
+      defaultFeePercent: 0.5,
+      typicalTenuresMonths: [180, 240, 300],
+    },
+    goldLoan: {
+      minRate: 9.0,
+      maxRate: 12.0,
+      defaultFeePercent: 0.5,
+      typicalTenuresMonths: [12, 24, 36],
+    },
   },
 
   cibilAdjustments: {

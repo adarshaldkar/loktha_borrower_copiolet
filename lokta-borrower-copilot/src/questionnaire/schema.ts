@@ -44,6 +44,8 @@ export const QUESTION_NODES: QuestionNode[] = [
       { label: 'Kirana stock + delivery vehicle', value: 'KIRANA_STOCK_VEHICLE' },
       { label: 'Electric two-wheeler / EV', value: 'TWO_WHEELER_EV' },
       { label: 'Loan against property', value: 'LAP_PROPERTY' },
+      { label: 'Home purchase / construction', value: 'HOME_PURCHASE' },
+      { label: 'Gold jewellery / gold loan', value: 'GOLD_JEWELLERY' },
     ],
   },
   {

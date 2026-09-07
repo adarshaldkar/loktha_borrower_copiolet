@@ -32,7 +32,9 @@ This document records every rule, threshold, rate band, and modeling assumption 
 | Rule Identifier | Parameter / Threshold | Value | Why It Exists (Financial Justification) | Source Classification |
 |---|---|---|---|---|
 | `RULE_RATE_BASE_PERSONAL` | Base Personal Loan Rate Band | **10.50% – 13.50%** | Standard reducing-balance rate card for prime/near-prime salaried borrowers in India (2026). | **Market Benchmark — Bank & NBFC Rate Cards** |
+| `RULE_RATE_BASE_HOME` | Base Home Loan Rate Band | **8.40% – 9.80%** | Floating residential mortgage rate pegged to repo-linked benchmark (RLLR). | **Market Benchmark — Prime Residential Mortgages** |
 | `RULE_RATE_BASE_LAP` | Base Secured LAP Rate Band | **8.75% – 10.50%** | Property-backed credit benchmark pegged to repo-linked lending rates (RLLR). | **Market Benchmark — Prime Secured Mortgage / LAP** |
+| `RULE_RATE_BASE_GOLD` | Base Gold Loan Rate Band | **9.00% – 12.00%** | Liquid gold jewelry collateralized retail lending benchmark. | **Market Benchmark — Gold Loan NBFCs & Banks** |
 | `RULE_RATE_BASE_2W_EV` | Base Two-Wheeler / EV Rate Band | **11.00% – 14.50%** | Standard retail vehicle asset financing benchmark. | **Market Benchmark — Auto Lending Rates** |
 | `RULE_RATE_BASE_BUSINESS` | Base Unsecured MSME Business Rate | **13.50% – 18.00%** | Higher risk premium charged for uncollateralized small business cashflow lending. | **Market Benchmark — NBFC Business Loan Cards** |
 | `RULE_CIBIL_PRIME_DISCOUNT` | CIBIL 750+ Prime Adjustment | **-0.50%** delta, $\pm 0.5\%$ spread | Prime credit history lowers underwriting risk and tightens rate band confidence. | **Market Benchmark — Tier-1 Bank Pricing** |

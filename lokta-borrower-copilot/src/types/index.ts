@@ -9,7 +9,9 @@ export type LoanPurpose =
   | 'GENERAL_PERSONAL'
   | 'KIRANA_STOCK_VEHICLE'
   | 'TWO_WHEELER_EV'
-  | 'LAP_PROPERTY';
+  | 'LAP_PROPERTY'
+  | 'HOME_PURCHASE'
+  | 'GOLD_JEWELLERY';
 
 export type CreditScoreBand =
   | 'PRIME_750_PLUS'
@@ -32,7 +34,9 @@ export type ProductPathway =
   | 'PERSONAL_LOAN'
   | 'LAP_SECURED'
   | 'TWO_WHEELER_EV'
-  | 'BUSINESS_LOAN';
+  | 'BUSINESS_LOAN'
+  | 'HOME_LOAN'
+  | 'GOLD_LOAN';
 
 export interface KnownValue<T> {
   status: 'KNOWN';
@@ -99,6 +103,8 @@ export interface RuleConfig {
     lapSecured: ProductRateRule;
     twoWheelerEV: ProductRateRule;
     businessLoan: ProductRateRule;
+    homeLoan: ProductRateRule;
+    goldLoan: ProductRateRule;
   };
   cibilAdjustments: {
     prime750Plus: RateAdjustment;

@@ -19,6 +19,8 @@ function known<T>(field: any): T | undefined {
 export function routeProduct(profile: BorrowerProfile): ProductPathway {
   const purpose = known<string>(profile.loanPurpose);
   const collateral = known<number>(profile.unencumberedCollateralValue) ?? 0;
+  if (purpose === 'HOME_PURCHASE') return 'HOME_LOAN';
+  if (purpose === 'GOLD_JEWELLERY') return 'GOLD_LOAN';
   if ((purpose === 'LAP_PROPERTY' || (purpose === 'KIRANA_STOCK_VEHICLE' && collateral > 0)) && collateral > 0) {
     return 'LAP_SECURED';
   }
@@ -31,7 +33,9 @@ function lenderRateFor(pathway: ProductPathway, rules: RuleConfig): number {
   const product = rules.productBaselines[
     pathway === 'LAP_SECURED' ? 'lapSecured' :
     pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :
-    pathway === 'BUSINESS_LOAN' ? 'businessLoan' : 'personalLoan'
+    pathway === 'BUSINESS_LOAN' ? 'businessLoan' :
+    pathway === 'HOME_LOAN' ? 'homeLoan' :
+    pathway === 'GOLD_LOAN' ? 'goldLoan' : 'personalLoan'
   ];
   return product.minRate;
 }
