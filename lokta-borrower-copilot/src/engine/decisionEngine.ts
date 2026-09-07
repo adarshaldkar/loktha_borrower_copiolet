@@ -1,4 +1,5 @@
 import type { BorrowerProfile, RuleConfig, Verdict } from '../types';
+import { routeProduct } from './capacityEngine';
 import { calculateEmi } from './math';
 import { normalizeBorrower, safeFoirCap } from './normalizer';
 
@@ -24,7 +25,14 @@ export function evaluateDecision(profile: BorrowerProfile, rules: RuleConfig, fa
   const currentSurplus = normalized.monthlyCashSurplus;
   const highCostApr = known(profile.highCostDebtApr);
   const recentBounce = known(profile.recentEmiBounce) ?? false;
-  const requestedTenure = purpose === 'LAP_PROPERTY' ? 84 : 36;
+  
+  const pathway = routeProduct(profile);
+  const productConfig = rules.productBaselines[
+    pathway === 'LAP_SECURED' ? 'lapSecured' :
+    pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :
+    pathway === 'BUSINESS_LOAN' ? 'businessLoan' : 'personalLoan'
+  ];
+  const requestedTenure = productConfig.typicalTenuresMonths[1] || productConfig.typicalTenuresMonths[0] || 36;
   const requestedEmi = calculateEmi(requested, fairRateHigh, requestedTenure);
   const projectedFoir = income > 0 ? (normalized.existingDebt + requestedEmi) / income : Infinity;
   const safeCap = safeFoirCap(profile, rules);

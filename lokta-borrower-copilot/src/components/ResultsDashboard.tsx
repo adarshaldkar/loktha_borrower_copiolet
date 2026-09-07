@@ -86,8 +86,8 @@ export function ResultsDashboard({ assessment }: { assessment: FullAssessment })
           </div>
           <div className="fee-table">
             <Row label="Nominal rate used" value={`${assessment.o3.nominalRateUsedForApr.toFixed(2)}%`} />
-            <Row label={`Processing fee (base @ ${assessment.o3.processingFeePercent.toFixed(2)}%)`} value={money(assessment.o4.chosenAmount > 0 ? assessment.o4.chosenAmount * assessment.o3.processingFeePercent / 100 : assessment.o2.safeBorrowerCapacity * assessment.o3.processingFeePercent / 100)} />
-            <Row label="GST on processing" value={money(assessment.o4.chosenAmount > 0 ? (assessment.o4.chosenAmount * assessment.o3.processingFeePercent / 100) * 0.18 : (assessment.o2.safeBorrowerCapacity * assessment.o3.processingFeePercent / 100) * 0.18)} />
+            <Row label={`Processing fee (base @ ${assessment.o3.processingFeePercent.toFixed(2)}%)`} value={money(assessment.o3.processingFeeAmount)} />
+            <Row label="GST on processing" value={money(assessment.o3.gstAmount)} />
             <Row label="Documentation fee" value={money(assessment.o3.documentationFee)} />
             <Row label="Upfront charges" value={money(assessment.o3.upfrontCharges)} />
             <Row label="Net disbursement" value={money(assessment.o3.netDisbursement)} />

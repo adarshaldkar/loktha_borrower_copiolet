@@ -3,6 +3,7 @@ import type { DecisionResult } from './decisionEngine';
 import type { CapacityResult } from './capacityEngine';
 import type { PricingResult } from './pricingEngine';
 import type { EmiResult } from './emiEngine';
+import type { RuleConfig } from '../types';
 
 export interface ExplanationTrace {
   id: string;
@@ -24,6 +25,7 @@ export function buildExplainability(
   capacity: CapacityResult,
   pricing: PricingResult,
   emi: EmiResult,
+  rules: RuleConfig,
 ): ExplanationTrace[] {
   return [
     {
@@ -44,7 +46,7 @@ export function buildExplainability(
       id: 'o2-safe',
       label: 'Safe borrower capacity',
       value: money(capacity.safeBorrowerCapacity),
-      reason: `Limited by the lower of safe FOIR capacity and ${Math.round(100 * (1 - 0.6))}% retained surplus logic.`,
+      reason: `Limited by the lower of safe FOIR capacity and ${Math.round(100 * rules.affordability.surplusRetainedPercent)}% retained surplus logic.`,
       math: `Max safe EMI ${money(capacity.maxSafeEmi)} → PV at fair-rate high end over ${capacity.idealTenureMonths} months.`,
     },
     {

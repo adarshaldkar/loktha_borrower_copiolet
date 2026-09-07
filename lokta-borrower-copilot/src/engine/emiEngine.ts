@@ -1,4 +1,5 @@
 import type { BorrowerProfile, RuleConfig } from '../types';
+import { routeProduct } from './capacityEngine';
 import { calculateEmi, calculateTotalInterest, roundCurrency, roundRate } from './math';
 import { normalizeBorrower } from './normalizer';
 
@@ -44,7 +45,13 @@ export function calculateEmiOutput(
 ): EmiResult {
   const normalized = normalizeBorrower(profile, rules);
   const amount = Math.max(0, known<number>(profile.requestedAmount) ?? 0);
-  const tenures = [24, 36, 60];
+  const pathway = routeProduct(profile);
+  const productConfig = rules.productBaselines[
+    pathway === 'LAP_SECURED' ? 'lapSecured' :
+    pathway === 'TWO_WHEELER_EV' ? 'twoWheelerEV' :
+    pathway === 'BUSINESS_LOAN' ? 'businessLoan' : 'personalLoan'
+  ];
+  const tenures = productConfig.typicalTenuresMonths.length > 0 ? productConfig.typicalTenuresMonths : [24, 36, 60];
   const tenureRows = tenures.map((months) => {
     const emi = calculateEmi(amount, fairRate, months);
     const totalInterest = calculateTotalInterest(amount, fairRate, months);

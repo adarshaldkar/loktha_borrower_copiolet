@@ -1,11 +1,12 @@
-import type { BorrowerProfile, ConfidenceState } from '../types';
+import { DEFAULT_RULES } from '../config/rules.config';
+import type { BorrowerProfile, ConfidenceState, RuleConfig } from '../types';
 
-export function calculateConfidence(profile: BorrowerProfile): ConfidenceState {
+export function calculateConfidence(profile: BorrowerProfile, rules: RuleConfig = DEFAULT_RULES): ConfidenceState {
   const flags: string[] = [];
   const creditBand = profile.creditScoreBand.status === 'KNOWN' ? profile.creditScoreBand.value : 'UNKNOWN';
   const employment = profile.employmentType.status === 'KNOWN' ? profile.employmentType.value : undefined;
   const recentBounce = profile.recentEmiBounce?.status === 'KNOWN' && profile.recentEmiBounce.value === true;
-  const hasHighCostDebt = profile.highCostDebtApr?.status === 'KNOWN' && (profile.highCostDebtApr.value ?? 0) > 24;
+  const hasHighCostDebt = profile.highCostDebtApr?.status === 'KNOWN' && (profile.highCostDebtApr.value ?? 0) > rules.stressScenarios.highCostDebtAprThreshold;
   const emergencyMonths = profile.emergencySavingsMonths?.status === 'KNOWN' ? profile.emergencySavingsMonths.value : undefined;
 
   const isInformal = employment === 'INFORMAL_GIG';
@@ -40,13 +41,6 @@ export function calculateConfidence(profile: BorrowerProfile): ConfidenceState {
     return {
       rating: 'MEDIUM',
       confidenceReason: 'Business cashflow and property collateral are documented, but unverified formal credit score widens rate uncertainty.',
-    };
-  }
-  
-  if (hasDocumentedProfit && hasCollateral && isCreditUnknown) {
-    return {
-      rating: 'MEDIUM',
-      confidenceReason: 'Documented income and collateral are available, but credit history and part of income are unverified.',
     };
   }
 

@@ -25,8 +25,8 @@ export function runAssessment(profile: BorrowerProfile, rules: RuleConfig = DEFA
   const capacity = calculateCapacities(profile, rules, pricing.fairRateMax);
   const decision = evaluateDecision(profile, rules, pricing.fairRateMax);
   const emi = calculateEmiOutput(profile, rules, pricing.nominalRateUsedForApr, capacity.maxSafeEmi);
-  const confidence = calculateConfidence(profile);
-  const explainability = buildExplainability(normalized, decision, capacity, pricing, emi);
+  const confidence = calculateConfidence(profile, rules);
+  const explainability = buildExplainability(normalized, decision, capacity, pricing, emi, rules);
 
   return {
     o1: decision,

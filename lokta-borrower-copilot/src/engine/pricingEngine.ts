@@ -8,6 +8,8 @@ export interface PricingResult {
   fairRateMax: number;
   nominalRateUsedForApr: number;
   processingFeePercent: number;
+  processingFeeAmount: number;
+  gstAmount: number;
   documentationFee: number;
   upfrontCharges: number;
   netDisbursement: number;
@@ -62,10 +64,11 @@ export function calculatePricing(profile: BorrowerProfile, rules: RuleConfig): P
   const amount = Math.max(0, known<number>(profile.requestedAmount) ?? 0);
   const productFee = product.defaultFeePercent;
   const processingFee = amount * productFee / 100;
+  const gstAmount = processingFee * (rules.fees.gstOnProcessingFeePercent / 100);
   const documentationFee = rules.fees.defaultDocumentationFee;
-  const upfrontCharges = processingFee * (1 + rules.fees.gstOnProcessingFeePercent / 100) + documentationFee;
+  const upfrontCharges = processingFee + gstAmount + documentationFee;
   const netDisbursement = Math.max(0, amount - upfrontCharges);
-  const tenure = pathway === 'LAP_SECURED' ? 84 : 36;
+  const tenure = product.typicalTenuresMonths[1] || product.typicalTenuresMonths[0] || 36;
   const emi = calculateEmi(amount, nominalRate, tenure);
   const allInApr = calculateAllInApr(netDisbursement, emi, tenure);
 
@@ -79,6 +82,8 @@ export function calculatePricing(profile: BorrowerProfile, rules: RuleConfig): P
     fairRateMax: max,
     nominalRateUsedForApr: nominalRate,
     processingFeePercent: productFee,
+    processingFeeAmount: Math.round(processingFee),
+    gstAmount: Math.round(gstAmount),
     documentationFee,
     upfrontCharges: Math.round(upfrontCharges),
     netDisbursement: Math.round(netDisbursement),
